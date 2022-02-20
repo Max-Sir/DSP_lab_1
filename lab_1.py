@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 def main():
     # amount of bins equals to sample rate
 
-    n = 32
+    n = 16
     arguments = np.arange(0, n) * np.pi / 6
     function_values = list(map(lambda x: np.sin(x) + np.cos(4 * x), arguments))
 
@@ -69,6 +69,14 @@ def main():
     ax4.set(title='Reverse FFT plot')
     ax4.grid()
 
+    # set the spacing between subplots
+    plt.subplots_adjust(left=0.1,
+                        bottom=0.1,
+                        right=0.9,
+                        top=0.9,
+                        wspace=0.4,
+                        hspace=0.4)
+
     fig2, ((ax5, ax6), (ax7, ax8)) = plt.subplots(2, 2)
 
     ax5.plot(arguments, function_values)
@@ -86,6 +94,14 @@ def main():
     ax8.plot(arguments, reverse_dft_result)
     ax8.set(title='Reverse DFT plot')
     ax8.grid()
+
+    # set the spacing between subplots
+    plt.subplots_adjust(left=0.1,
+                        bottom=0.1,
+                        right=0.9,
+                        top=0.9,
+                        wspace=0.4,
+                        hspace=0.4)
 
     plt.show()
 
