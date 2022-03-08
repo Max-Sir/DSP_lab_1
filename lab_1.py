@@ -1,109 +1,78 @@
-import transform as tr
-import numpy as np
-import cmath as cm
 import matplotlib.pyplot as plt
+import numpy as np
+
+from operations import SignalProcessor
 
 
 def main():
-    # amount of bins equals to sample rate
-
     n = 16
     arguments = np.arange(0, n) * np.pi / 6
-    function_values = list(map(lambda x: np.sin(x) + np.cos(4 * x), arguments))
+    function_values_1 = list(map(np.sin, arguments))
+    function_values_2 = list(map(lambda x: np.cos(4 * x), arguments))
 
-    fft_result = tr.conf_dif_fft(function_values, n, 1)
-    reverse_fft_result = tr.conf_dif_fft(fft_result, n, -1)
+    basic_correlation = SignalProcessor.correlation_convolution(function_values_1, function_values_2, 1)
+    print('Basic correlation complexity: {}'.format(SignalProcessor.complexity_counter))
+    basic_convolution = SignalProcessor.correlation_convolution(function_values_1, function_values_2, -1)
+    print('Basic convolution complexity: {}'.format(SignalProcessor.complexity_counter))
 
-    dft_result = tr.conf_dft(function_values, n, 1)
-    reverse_dft_result = tr.conf_dft(dft_result, n, -1)
+    fft_based_correlation = \
+        SignalProcessor.correlation_convolution_fft_based(function_values_1, function_values_2, 1)
+    print('FFT-based correlation complexity: {}'.format(SignalProcessor.complexity_counter))
+    fft_based_convolution = \
+        SignalProcessor.correlation_convolution_fft_based(function_values_1, function_values_2, -1)
+    print('FFT-based convolution complexity: {}'.format(SignalProcessor.complexity_counter))
 
-    # normalizing the transformed output
-    for i in range(n):
-        fft_result[i] /= n
-        dft_result[i] /= n
-
-    frequencies = [x for x in range(-int(n / 2), int(n / 2), 1)]
-
-    # shifting second half of transform results
-    shifted_fft = tr.fft_shift(fft_result)
-    shifted_dft = tr.fft_shift(dft_result)
-
-    fft_amplitude_values = []
-    dft_amplitude_values = []
-    fft_phase_values = []
-    dft_phase_values = []
-
-    # ejecting magnitude and phase
-    for i in range(n):
-        fft_amplitude_values.append(abs(shifted_fft[i]))
-        dft_amplitude_values.append(abs(shifted_dft[i]))
-        fft_phase_values.append(cm.phase(shifted_fft[i]))
-        dft_phase_values.append(cm.phase(shifted_dft[i]))
-
-    # possible noise reduction
-    threshold_fft = abs(max(fft_result)) / 10000
-    threshold_dft = abs(max(dft_result)) / 10000
-
-    for i in range(n):
-        if abs(fft_phase_values[i]) < threshold_fft:
-            fft_phase_values[i] = 0
-        if abs(dft_phase_values[i]) < threshold_dft:
-            dft_phase_values[i] = 0
+    np_correlation = np.correlate(function_values_1, function_values_2, mode='same')
+    np_convolution = np.convolve(function_values_1, function_values_2, mode='same')
 
     # plotting part
-    fig, ((ax1, ax2), (ax3, ax4)) = plt.subplots(2, 2)
-
-    ax1.plot(arguments, function_values)
-    ax1.set(title='Function plot')
+    _, ((ax1, ax2), (ax3, ax4), (ax5, ax6)) = plt.subplots(3, 2)
+    ax1.plot(arguments, function_values_1)
+    ax1.set(title='First sequence')
     ax1.grid()
 
-    ax2.stem(frequencies, fft_amplitude_values, markerfmt=' ')
-    ax2.set(title='Magnitude spectrum plot (FFT)')
+    ax2.plot(arguments, function_values_2)
+    ax2.set(title='Second sequence')
     ax2.grid()
 
-    ax3.stem(frequencies, fft_phase_values, markerfmt=' ')
-    ax3.set(title='Phase spectrum plot (FFT)')
+    ax3.plot(arguments, basic_correlation)
+    ax3.set(title='Basic correlation')
     ax3.grid()
 
-    ax4.plot(arguments, reverse_fft_result)
-    ax4.set(title='Reverse FFT plot')
+    ax4.plot(arguments, basic_convolution)
+    ax4.set(title='Basic convolution')
     ax4.grid()
 
     # set the spacing between subplots
-    plt.subplots_adjust(left=0.1,
-                        bottom=0.1,
-                        right=0.9,
-                        top=0.9,
-                        wspace=0.4,
-                        hspace=0.4)
 
-    fig2, ((ax5, ax6), (ax7, ax8)) = plt.subplots(2, 2)
-
-    ax5.plot(arguments, function_values)
-    ax5.set(title='Function plot')
+    ax5.plot(arguments, fft_based_correlation)
+    ax5.set(title='FFT-based correlation')
     ax5.grid()
 
-    ax6.stem(frequencies, dft_amplitude_values, markerfmt=' ')
-    ax6.set(title='Magnitude spectrum plot (DFT)')
+    ax6.plot(arguments, fft_based_convolution)
+    ax6.set(title='FFT-based convolution')
     ax6.grid()
 
-    ax7.stem(frequencies, dft_phase_values, markerfmt=' ')
-    ax7.set(title='Phase spectrum plot (DFT)')
-    ax7.grid()
 
-    ax8.plot(arguments, reverse_dft_result)
-    ax8.set(title='Reverse DFT plot')
-    ax8.grid()
+
+    # ax7.plot(arguments, np_correlation)
+    # ax7.set(title='Numpy correlation')
+    # ax7.grid()
+    #
+    # ax8.plot(arguments, np_convolution)
+    # ax8.set(title='Numpy convolution')
+    # ax8.grid()
 
     # set the spacing between subplots
     plt.subplots_adjust(left=0.1,
                         bottom=0.1,
                         right=0.9,
                         top=0.9,
-                        wspace=0.4,
-                        hspace=0.4)
+                        wspace=0.5,
+                        hspace=0.5)
+    plt.savefig('fig.png')
 
-    plt.show()
+    # plt.show() TODO(if not online IDE)
 
 
 if __name__ == '__main__':
